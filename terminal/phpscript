@@ -1,0 +1,33 @@
+#!/usr/bin/php
+<?php
+	require_once "service";
+	function query() {
+		$conn = getConnection(0);
+		$fecha_inicial = getDateInitial();
+		$fecha_final = getDateFinal();
+		$sql = "SELECT * FROM informe_licencias_adicionales WHERE CAST([FECHA DE INICIO] AS DATE) BETWEEN CAST('{$fecha_inicial}' AS DATE) and CAST('{$fecha_final}' AS DATE)";
+		return $res = getQuery($conn, $sql);
+	}
+
+	function getDateInitial() {
+		$date = date("Y-m-01");
+		$argv = $_SERVER['argv'];
+		$fecha_inicial = isset($argv[1]) ? $argv[1] : "";
+		return empty($fecha_inicial) ? $date : $fecha_inicial;
+	}
+
+	function getDateFinal() {
+		$date = date("Y-m-01");
+		$numeroDias = date('t', strtotime($date) );
+		$argv = $_SERVER['argv'];
+		$fecha_final = isset($argv[2]) ? $argv[2] : "";
+		return empty($fecha_final) ? (date("Y-m-").$numeroDias) : $fecha_final;
+	}
+	// print_r(query());
+	/*$sslConfig = array(
+		"host" => "",
+		"port" => "",
+		"username" => "",
+		"pass" => ""
+	);*/
+	enviarEmail("example@email.com", "prueba envío de email desde cli", "este es un email de prueba", "example@email.com", "email notifications", NULL, false);

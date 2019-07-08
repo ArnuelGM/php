@@ -1,0 +1,57 @@
+<?php
+	$ISW = 'OCUPACIONAL';
+	require_once "{$_SERVER[$ISW]}/entorno.php";
+	require_once ("{$_SERVER[$ISW]}/sismaweb/model/phpmailer/class.phpmailer.php");
+	
+	$serverdb = $_SESSION['host'];
+	$dbname = $_SESSION ['database'];
+	$userdb = $_SESSION ['cliente'];
+	$userdbpass = $_SESSION ['clave'];
+
+	$connections = array(array("host" => $serverdb, "db" => $dbname, "user" => $userdb, "pass" => $userdbpass));
+	
+	function getConnection($index) {
+	    global $connections;
+	    $config = $connections[$index];
+	    $strConnection = "sqlsrv:server={$config['host']};Database={$config['db']}";
+	    $conn = new PDO( $strConnection, $config['user'],$config['pass'], array( PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION )  );
+	    if ($conn === false) {
+	        die(formatErrors(sqlsrv_errors()));
+	    }
+	    return $conn;
+	}
+	function getQuery($conn, $query) {
+		$res = $conn->query($query);
+	    return $res->fetchAll(PDO::FETCH_ASSOC);
+	}
+	function enviarEmail($address, $subject, $body, $from, $fromname, $adjunto = NULL, $isHTML = false, $sslConfig = NULL) {
+		try {
+			$mail = new PHPMailer ();
+
+			$mail->From = $from;
+			$mail->FromName = $fromname;
+			$mail->AddAddress ( $address );
+			
+			$mail->Subject = $subject;
+			$mail->Body = $body;
+			$mail->IsHTML ( $isHTML );
+			
+			if (! empty ( $adjunto )) {
+				$mail->AddAttachment ( $adjunto );
+			}
+			
+			$mail->IsSMTP ();
+			$mail->SMTPAuth = true;
+			$mail->Host = isset($sslConfig['host']) ? $sslConfig['host'] : "smtp.gmail.com";
+			$mail->Port = isset($sslConfig['post']) ? $sslConfig['post'] : "465";
+			$mail->Username = isset($sslConfig['username']) ? $sslConfig['username'] : "";
+			$mail->Password = isset($sslConfig['pass']) ? $sslConfig['pass'] : "";
+			$mail->SMTPSecure = "ssl";
+			
+			return $mail->Send ();
+			//echo "Mensaje Enviado";
+			
+		} catch ( Exception $error ) {
+			echo $error->getMessage ();
+		}
+	}
